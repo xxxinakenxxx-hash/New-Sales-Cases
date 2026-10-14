@@ -102,6 +102,7 @@ currentState
 - `AI_OUTPUT_INVALID`
 - `ATTACHMENT_ERROR`
 - `ATTACHMENT_UNREADABLE`
+- `ATTACHMENT_IN_USE`
 - `FACT_SOURCE_INVALID`
 - `FACT_CONFLICT`
 - `COMPILATION_NOT_READY`
@@ -234,6 +235,67 @@ currentState
 - 公開済み
   を一覧する
 
+### listManagedCases(criteria)
+
+公開API。
+
+対象: manager / admin
+
+出力: `CaseListDTO`
+
+責務:
+
+- 自分の管轄範囲の案件を一覧する
+- 所属・権限条件をサーバー側で適用する
+
+### markCaseReadyForAI(caseId, expectedVersion)
+
+公開API。
+
+責務:
+
+- S-02の「AIで整理する」操作
+- AIへ渡せるsourceが1件以上あることを検証
+- `draft → ready_for_ai` へ遷移する
+
+### suspendCase(caseId, expectedVersion)
+
+公開API。
+
+責務:
+
+- 対象案件を `suspended` へ遷移
+- 停止前状態を保持
+
+### resumeCase(caseId, expectedVersion)
+
+公開API。
+
+責務:
+
+- `suspended_from_state` に基づき停止前状態へ戻す
+
+### startCaseRevision(caseId, expectedVersion)
+
+公開API。
+
+責務:
+
+- 公開済み事例の改訂を開始
+- caseを `fact_review` へ戻す
+- 現在のpublicationは維持し、旧公開版を検索・閲覧可能なままにする
+- 新しいcompilationを公開するまで公開版を差し替えない
+
+### reopenFactReview(caseId, compilationId, reason, expectedVersion)
+
+公開API。
+
+責務:
+
+- S-05の「事実確認へ戻る」
+- `compilation_review → fact_review` へ遷移
+- 現在のcompilationは履歴として保持
+
 ### archiveCase(caseId, expectedVersion)
 
 公開API。
@@ -327,7 +389,7 @@ currentState
 
 - attachmentを論理削除
 - そのattachmentだけを根拠にする未confirmed candidateへの影響を記録
-- confirmed factが参照する場合は警告または削除拒否
+- confirmed factが参照している場合は `ATTACHMENT_IN_USE` として削除を拒否する
 
 ### getAttachments(caseId)
 
@@ -423,7 +485,7 @@ currentState
 - question batch有無
   を返す
 
-### requestAdditionalInterview(caseId, reason)
+### requestAdditionalInterview(caseId, reason, expectedVersion)
 
 公開API。
 
@@ -557,9 +619,9 @@ currentState
 
 公開API。
 
-出力: `QuestionBatchDTO | null`
+出力: `QuestionBatchDTO`
 
-質問0件の場合は `null` またはquestions空配列を正常返却する。
+質問0件の場合もDTOを返し、`questions: []`、`status: "not_required"` とする。
 
 ### submitQuestionBatch(caseId, batchId, answers, expectedVersion)
 
@@ -583,8 +645,20 @@ currentState
 責務:
 
 - 回答修正
+- `later → answered / unknown / skipped` の変更
 - source版更新
 - 関連candidate再評価
+
+### getDeferredQuestions(caseId)
+
+公開API。
+
+出力: `QuestionDTO[]`
+
+責務:
+
+- disposition=`later` の保留質問だけを返す
+- fact_review以降でも再回答できるようにする
 
 ## 14. Interview内部関数
 
@@ -784,6 +858,7 @@ AI実行者だけではconfirmed不可。
 - salesperson_judgment
 - collaboration
 - before_after
+- result
 - customer_quote
 - salesperson_joy
 - success_factor
@@ -837,6 +912,7 @@ MVPでは承認フローを使用しない。
 - 公開停止
 - 検索対象から除外
 - compilationは保持
+- caseを `compilation_review` へ戻す
 
 ### getPublicationState(caseId)
 
@@ -1087,6 +1163,16 @@ MVPでは1事例単位の出力を対象とし、複数事例一括PDFは対象�
 
 ### aggregateUsage_(events, filters)
 
+### deriveAbandonedCases_(cases, events, settings)
+
+責務:
+
+- 作成開始済み
+- published / archivedではない
+- 設定された一定期間、進行イベントがない
+
+案件を「途中離脱」の派生指標として集計する。
+
 ### aggregateFunnel_(events, filters)
 
 ### recordSearchEvent_(criteria, resultCount, context)
@@ -1272,6 +1358,9 @@ MVPでは1事例単位の出力を対象とし、複数事例一括PDFは対象�
 - caseId
 - compilationId
 - status
+- visibility
+- showCustomerName
+- showAmounts
 - publishedAt
 - publishedBy
 - unpublishedAt
@@ -1307,12 +1396,15 @@ MVPでは1事例単位の出力を対象とし、複数事例一括PDFは対象�
 
 - caseId
 - title
+- customerName
 - customerType
 - problem
 - proposal
 - result
 - barrierBreakthrough
 - targetCustomer
+
+`customerName` は publication.showCustomerName=false の場合は返さない。
 
 ### PublishedCaseDetailDTO
 
@@ -1394,12 +1486,16 @@ domainは固定質問順を作るために使わない。
 
 - `getCurrentUser`
 - `listMyCases`
+- `listManagedCases`（manager/admin）
 - `searchCases`
 
 ### S-02 事例入力
 
 - `createCase`
 - `saveCaseInput`
+- `markCaseReadyForAI`
+- `suspendCase`
+- `resumeCase`
 - `getCase`
 - `createAttachmentUpload`
 - `completeAttachmentUpload`
@@ -1412,6 +1508,7 @@ domainは固定質問順を作るために使わない。
 - `getQuestionBatch`
 - `submitQuestionBatch`
 - `requestAdditionalInterview`
+- `getDeferredQuestions`
 
 ### S-04 事実確認
 
@@ -1431,7 +1528,9 @@ domainは固定質問順を作るために使わない。
 - `saveCompilationExpressionEdits`
 - `recompileCase`
 - `completeCompilationReview`
+- `reopenFactReview`
 - `publishCase`
+- `startCaseRevision`
 
 ### S-06 承認
 
@@ -1466,6 +1565,7 @@ MVPでは未使用。
 createCase
 → saveCaseInput
 → attachment upload
+→ markCaseReadyForAI
 → runCaseUnderstanding
 ```
 
@@ -1503,6 +1603,18 @@ completeCompilationReview
 → buildSearchIndex_
 → published
 ```
+
+### 公開済み事例の改訂
+
+```text
+startCaseRevision
+→ fact review
+→ compileCase / recompileCase
+→ completeCompilationReview
+→ publishCase
+```
+
+旧publicationは再公開完了まで維持する。
 
 ### 検索・再利用
 
@@ -1562,7 +1674,7 @@ candidate / needs_check / rejectedを確定本文根拠へ入れない。
 - OCR / document parser
 - AI provider / model
 - PDF renderer
--全文検索エンジン
+- 全文検索エンジン
 
 ただし、技術選定によって本書の業務責務を変更しない。
 
