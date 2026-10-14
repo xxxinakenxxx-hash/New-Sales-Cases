@@ -266,6 +266,7 @@ currentState
 
 - 対象案件を `suspended` へ遷移
 - 停止前状態を保持
+- `case_suspended` を記録
 
 ### resumeCase(caseId, expectedVersion)
 
@@ -274,6 +275,7 @@ currentState
 責務:
 
 - `suspended_from_state` に基づき停止前状態へ戻す
+- `case_resumed` を記録
 
 ### startCaseRevision(caseId, expectedVersion)
 
@@ -282,6 +284,7 @@ currentState
 責務:
 
 - 公開済み事例の改訂を開始
+- `case_revision_started` を記録
 - caseを `fact_review` へ戻す
 - 現在のpublicationは維持し、旧公開版を検索・閲覧可能なままにする
 - 新しいcompilationを公開するまで公開版を差し替えない
@@ -293,6 +296,7 @@ currentState
 責務:
 
 - S-05の「事実確認へ戻る」
+- `fact_review_reopened` を記録
 - `compilation_review → fact_review` へ遷移
 - 現在のcompilationは履歴として保持
 
@@ -646,6 +650,7 @@ currentState
 
 - 回答修正
 - `later → answered / unknown / skipped` の変更
+- `deferred_question_answered` を記録
 - source版更新
 - 関連candidate再評価
 
@@ -912,7 +917,8 @@ MVPでは承認フローを使用しない。
 - 公開停止
 - 検索対象から除外
 - compilationは保持
-- caseを `compilation_review` へ戻す
+- 改訂中の `fact_review` / `compilation_review` は現在状態を維持する
+- case.status=`published` で改訂作業を開始していない場合のみ `compilation_review` へ戻す
 
 ### getPublicationState(caseId)
 
@@ -983,6 +989,7 @@ MVPの通常フローには組み込まない。
 カード要素:
 
 - title
+- customer name（publication.showCustomerName=true の場合）
 - customer type
 - problem
 - proposal
@@ -1167,11 +1174,14 @@ MVPでは1事例単位の出力を対象とし、複数事例一括PDFは対象�
 
 責務:
 
-- 作成開始済み
-- published / archivedではない
+以下をすべて満たす案件を「途中離脱」の派生指標として集計する。
+
+- archivedではない
+- suspendedではない
+- 有効なpublicationが存在しない
 - 設定された一定期間、進行イベントがない
 
-案件を「途中離脱」の派生指標として集計する。
+進行イベントは統合設計書§25で定義したイベント集合を用いる。
 
 ### aggregateFunnel_(events, filters)
 
@@ -1512,6 +1522,8 @@ domainは固定質問順を作るために使わない。
 
 ### S-04 事実確認
 
+- `getDeferredQuestions`
+- `updateAnswer`
 - `getFactReview`
 - `confirmFact`
 - `confirmFactWithEdit`
