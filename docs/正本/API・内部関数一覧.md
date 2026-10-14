@@ -668,7 +668,7 @@ currentState
 - 利用者手動fact追加
 - manual source作成
 - 根拠説明を保持
-- 直接confirmedとするかcandidateから始めるかは、実装時の安全側としてcandidate開始を基本とする
+- 新規追加時はcandidateとして保存し、confirm操作を経てconfirmedにする
 
 ### mergeFactCandidates(caseId, factIds, mergedValue, expectedVersion)
 
@@ -971,6 +971,8 @@ A4印刷・PDFはMVP必須。
 ### generatePdf(caseId, options)
 
 公開API。
+
+MVPでは1事例単位の出力を対象とし、複数事例一括PDFは対象外。
 
 出力: `PdfResultDTO`
 
@@ -1280,11 +1282,16 @@ A4印刷・PDFはMVP必須。
 - keyword
 - customerType
 - problem
+- targetProcess
 - machine
 - maker
+- proposal
+- selectionReason
 - result
 - barrier
 - successFactor
+- targetCustomer
+- reusePoint
 - branch
 - dateRange
 - page
@@ -1355,6 +1362,7 @@ MVPのfact domainは以下を基本とする。
 - `customer_profile`
 - `customer_context`
 - `problem`
+- `target_process`
 - `impact_before`
 - `proposal`
 - `product`
