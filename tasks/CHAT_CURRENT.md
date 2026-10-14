@@ -108,6 +108,27 @@ GitHubを正本管理の中心とし、正本文書をMarkdownで管理する。
 - 判定: 開発工程表・テスト計画の作成へ進行可
 - 記録: `docs/記録/正本クロスレビュー_2026-10-14.md`
 
+## 第2クロスレビュー修正
+
+ユーザーによる全文照合報告13件を独立確認し、以下を修正した。
+
+- target_process: 現在の統合設計にも反映済みであることを確認
+- 編纂構造へ result を追加
+- publicationへ visibility / showCustomerName / showAmounts を追加
+- CaseCardDTOへcustomerNameを追加
+- 「事実確認へ戻る」API・状態遷移を追加
+- 公開済み事例の改訂フローを追加
+- unpublish後はcompilation_reviewへ戻す
+- suspendedの停止・再開APIを追加
+- draft→ready_for_aiをmarkCaseReadyForAIで明示
+- later質問の再回答フローを追加
+- manager用listManagedCasesを追加
+- 途中離脱を派生指標として定義
+- requestAdditionalInterviewへexpectedVersion追加
+- 質問0件レスポンスをquestions: []へ統一
+- confirmed参照資料の削除はATTACHMENT_IN_USEで拒否へ統一
+- API§36の箇条書きを修正
+
 ## 次に行うこと
 
 1. `docs/正本/開発工程表・テスト計画.md` を新規作成
