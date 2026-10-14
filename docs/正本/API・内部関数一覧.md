@@ -235,19 +235,6 @@ currentState
 - 公開済み
   を一覧する
 
-### listManagedCases(criteria)
-
-公開API。
-
-対象: manager / admin
-
-出力: `CaseListDTO`
-
-責務:
-
-- 自分の管轄範囲の案件を一覧する
-- 所属・権限条件をサーバー側で適用する
-
 ### markCaseReadyForAI(caseId, expectedVersion)
 
 公開API。
@@ -976,9 +963,10 @@ MVPの通常フローには組み込まない。
 
 - 構造化条件
 - 全文条件
-- 公開範囲
-- 権限
+- publication状態
   を適用
+- 社内公開済み事例は、認証済み社内利用者へ全社横断で返す
+- 拠点・部門・manager管轄による閲覧制限はMVPでは行わない
 
 ### getCaseCards(criteria)
 
@@ -1496,7 +1484,6 @@ domainは固定質問順を作るために使わない。
 
 - `getCurrentUser`
 - `listMyCases`
-- `listManagedCases`（manager/admin）
 - `searchCases`
 
 ### S-02 事例入力
