@@ -415,7 +415,7 @@ currentState
 
 - 実ファイル保存
 
-具体ストレージは技術選定時に決定。
+物理ストレージは `docs/正本/技術選定理由書.md` に従いGoogle Cloud Storageを使用する。内部storage keyを通常のclient DTOへ露出しない。
 
 ### extractAttachmentText_(attachment)
 
@@ -1159,7 +1159,7 @@ MVPでは1事例単位の出力を対象とし、複数事例一括PDFは対象�
 
 ### renderPdf_(model, options)
 
-具体PDFエンジンは技術選定時に確定。
+PDF生成は `docs/正本/技術選定理由書.md` に従い、印刷専用HTML/CSS ViewModelをheadless Chromium系rendererでPDF化する。
 
 ## 28. Admin API
 
