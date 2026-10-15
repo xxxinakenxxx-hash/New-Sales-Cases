@@ -1023,7 +1023,76 @@ MVPの通常フローには組み込まない。
 
 ベクトル検索関数はMVPでは定義しない。
 
-## 24. Print / PDF API
+## 24. Comment API
+
+コメントは公開済み販売事例に対する社内利用者の補足・質問・横展開アイデア等を蓄積するための機能とする。
+
+コメントはconfirmed factではなく、AI案件理解・編纂へ自動投入しない。
+
+### getComments(caseId)
+
+公開API。
+
+出力: `CommentDTO[]`
+
+責務:
+
+- 公開済み事例の有効コメントを時系列で返す
+- 削除済みコメント本文は通常利用者へ返さない
+
+### createComment(caseId, body)
+
+公開API。
+
+責務:
+
+- 認証済み社内利用者のコメントを登録
+- 対象caseが公開済みであることを検証
+- `comment_created` を記録
+
+### updateComment(commentId, body, expectedVersion)
+
+公開API。
+
+責務:
+
+- 投稿者本人のコメントだけ編集可能
+- version競合を検出
+- `comment_updated` を記録
+
+### deleteComment(commentId, expectedVersion)
+
+公開API。
+
+責務:
+
+- 投稿者本人のコメントを論理削除
+- `comment_deleted` を記録
+
+### adminDeleteComment(commentId, reason, expectedVersion)
+
+公開API。
+
+対象: admin / sysadmin
+
+責務:
+
+- 管理上必要なコメントを論理削除
+- 削除理由を監査ログへ記録
+
+## 25. Comment内部関数
+
+### validateCommentTarget_(caseId)
+
+### validateCommentAuthor_(commentId, userContext)
+
+### persistComment_(comment)
+
+### softDeleteComment_(commentId, actor, reason?)
+
+### sanitizeCommentForClient_(comment)
+
+## 26. Print / PDF API
 
 A4印刷・PDFはMVP必須。
 
@@ -1063,7 +1132,7 @@ MVPでは1事例単位の出力を対象とし、複数事例一括PDFは対象�
 - ブラウザ印刷用HTMLを生成
 - HTMLを正本データにはしない
 
-## 25. Print内部関数
+## 27. Print内部関数
 
 ### buildPrintModel_(caseId, compilation, facts)
 
@@ -1082,7 +1151,7 @@ MVPでは1事例単位の出力を対象とし、複数事例一括PDFは対象�
 
 具体PDFエンジンは技術選定時に確定。
 
-## 26. Admin API
+## 28. Admin API
 
 ### getAdminUsers(criteria)
 
@@ -1108,7 +1177,7 @@ MVPでは1事例単位の出力を対象とし、複数事例一括PDFは対象�
 
 管理者向けに内部状態、fact状態、attachment extraction、publication状態等を返す。
 
-## 27. Admin内部関数
+## 29. Admin内部関数
 
 ### validateAdminPermission_(userContext, action)
 
@@ -1120,7 +1189,7 @@ MVPでは1事例単位の出力を対象とし、複数事例一括PDFは対象�
 
 ### redactSensitiveFields_(record)
 
-## 28. Analytics API
+## 30. Analytics API
 
 ランキング機能はMVP対象外。
 
@@ -1152,7 +1221,7 @@ MVPでは1事例単位の出力を対象とし、複数事例一括PDFは対象�
 
 出力: `FunnelDTO`
 
-## 29. Analytics内部関数
+## 31. Analytics内部関数
 
 ### recordActivity_(event, context)
 
@@ -1179,7 +1248,7 @@ MVPでは1事例単位の出力を対象とし、複数事例一括PDFは対象�
 
 人気ランキング、営業担当ランキング等は作らない。
 
-## 30. Error / Audit内部関数
+## 32. Error / Audit内部関数
 
 ### createRequestId_()
 
@@ -1191,7 +1260,7 @@ MVPでは1事例単位の出力を対象とし、複数事例一括PDFは対象�
 
 ### isRetryableError_(error)
 
-## 31. DTO一覧
+## 33. DTO一覧
 
 ### UserContextDTO
 
@@ -1404,6 +1473,18 @@ MVPでは1事例単位の出力を対象とし、複数事例一括PDFは対象�
 
 `customerName` は publication.showCustomerName=false の場合は返さない。
 
+### CommentDTO
+
+- commentId
+- caseId
+- publicationId
+- body
+- createdBy
+- createdByName
+- createdAt
+- updatedAt
+- version
+
 ### PublishedCaseDetailDTO
 
 - caseId
@@ -1445,7 +1526,7 @@ MVPでは1事例単位の出力を対象とし、複数事例一括PDFは対象�
 - zeroResultSearches
 - views
 
-## 32. domain一覧
+## 34. domain一覧
 
 MVPのfact domainは以下を基本とする。
 
@@ -1478,7 +1559,7 @@ MVPのfact domainは以下を基本とする。
 
 domainは固定質問順を作るために使わない。
 
-## 33. 画面と主要API対応
+## 35. 画面と主要API対応
 
 ### S-01 ホーム・案件一覧
 
@@ -1544,6 +1625,10 @@ MVPでは未使用。
 ### S-08 事例詳細
 
 - `getPublishedCaseDetail`
+- `getComments`
+- `createComment`
+- `updateComment`
+- `deleteComment`
 
 ### S-09 印刷・PDF
 
@@ -1553,10 +1638,11 @@ MVPでは未使用。
 
 ### S-10 管理
 
+- `adminDeleteComment`
 - Admin API群
 - Analytics API群
 
-## 34. 代表的な状態遷移とAPI
+## 36. 代表的な状態遷移とAPI
 
 ### 新規入力
 
@@ -1615,6 +1701,16 @@ startCaseRevision
 
 旧publicationは再公開完了まで維持する。
 
+### コメント
+
+```text
+getPublishedCaseDetail
+→ getComments
+→ createComment / updateComment / deleteComment
+```
+
+コメント内容はfactへ自動変換しない。
+
 ### 検索・再利用
 
 ```text
@@ -1624,11 +1720,11 @@ searchCases
 → getPrintModel / generatePdf
 ```
 
-## 35. 禁止するAPI設計
+## 37. 禁止するAPI設計
 
 以下のようなAPIは作らない。
 
-### 35.1 AI結果を即confirmedにするAPI
+### 37.1 AI結果を即confirmedにするAPI
 
 例:
 
@@ -1636,7 +1732,7 @@ searchCases
 
 禁止。
 
-### 35.2 1問ずつ自動連鎖するAPI
+### 37.2 1問ずつ自動連鎖するAPI
 
 例:
 
@@ -1646,19 +1742,19 @@ searchCases
 
 回答送信後に自動で次質問を生成しない。
 
-### 35.3 fallback質問を返すだけのAPI
+### 37.3 fallback質問を返すだけのAPI
 
 semantic重複でAI質問が消えた場合に、固定質問を順番に埋めるAPIを作らない。
 
-### 35.4 HTMLを正本保存するAPI
+### 37.4 HTMLを正本保存するAPI
 
 完成HTMLを正本データとして保存しない。
 
-### 35.5 未確認事実を編纂へ混ぜるAPI
+### 37.5 未確認事実を編纂へ混ぜるAPI
 
 candidate / needs_check / rejectedを確定本文根拠へ入れない。
 
-## 36. 技術選定後に確定する項目
+## 38. 技術選定後に確定する項目
 
 以下は、技術スタック選定後に物理API仕様へ落とし込む。
 
@@ -1677,7 +1773,7 @@ candidate / needs_check / rejectedを確定本文根拠へ入れない。
 
 ただし、技術選定によって本書の業務責務を変更しない。
 
-## 37. 次工程への条件
+## 39. 次工程への条件
 
 本書確定後、`docs/正本/開発工程表・テスト計画.md` を作成する。
 
