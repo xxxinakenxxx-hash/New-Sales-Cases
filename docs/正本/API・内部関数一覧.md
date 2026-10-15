@@ -443,6 +443,8 @@ currentState
 - 表計算
 - テキスト
   から利用可能なテキストを抽出
+- 抽出失敗と判読不確実を区別する
+- 判読不確実な範囲・警告を保持し、確実な原文として扱わない
 
 ### persistAttachmentExtraction_(attachmentId, result)
 
@@ -1386,6 +1388,8 @@ PDF生成は `docs/正本/技術選定理由書.md` に従い、印刷専用HTML
 - size
 - downloadAvailable
 - extractionStatus
+- extractionWarnings
+- requiresReview
 - extractedAt
 - errorCode
 - version
