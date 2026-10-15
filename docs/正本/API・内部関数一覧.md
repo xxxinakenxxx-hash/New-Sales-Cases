@@ -14,9 +14,9 @@
 
 本書は、統合設計書で定義した業務責務を、実装時に利用する公開API・内部関数・DTO・エラー・呼出関係へ落とし込む。
 
-本書は特定の技術スタック、HTTPフレームワーク、GAS関数形式、DB製品へ依存しない論理API定義とする。
+本書は業務責務を示す論理API定義とする。物理実装は `docs/正本/技術選定理由書.md` の技術構成に従う。
 
-実装時にHTTP API、RPC、サーバー関数、Cloud Functions等へ変換してもよいが、ここで定める責務境界は維持する。
+HTTP endpointやサーバーモジュールへ落とし込む際も、ここで定める責務境界は維持する。
 
 ## 2. 命名規則
 
@@ -58,6 +58,8 @@
 - 実行者コンテキスト
 
 重要更新では、サーバー側のversionと一致しない場合に上書きせず `CONFLICT` を返す。
+
+作成、AI実行、アップロード完了、公開、コメント投稿、PDF生成等の再送が起こりうる処理は、requestIdまたはidempotency keyで同一要求の二重実行を防ぐ。
 
 すべての公開APIはサーバー側で認証・認可する。
 
@@ -359,7 +361,7 @@ currentState
 - case権限を確認
 - 許可形式・サイズ等を検証
 
-技術スタックにより、署名付きURL、直接アップロード、サーバー中継等へ実装変換する。
+`docs/正本/技術選定理由書.md` に従い、Google Cloud Storageへの期限付きアップロードURLまたは同等の安全なアップロード情報を発行する。内部storage keyをクライアントへ直接公開しない。
 
 ### completeAttachmentUpload(caseId, attachmentId, expectedVersion)
 
@@ -389,7 +391,20 @@ currentState
 
 出力: `AttachmentDTO[]`
 
-### retryAttachmentExtraction(caseId, attachmentId)
+### getAttachmentDownloadUrl(caseId, attachmentId)
+
+公開API。
+
+出力: `AttachmentDownloadDTO`
+
+責務:
+
+- case権限を確認
+- 対象attachmentが有効であることを確認
+- 短時間だけ有効なダウンロードURLまたは同等の取得情報を返す
+- 内部storage keyを返さない
+
+### retryAttachmentExtraction(caseId, attachmentId, expectedVersion)
 
 公開API。
 
@@ -1310,6 +1325,44 @@ PDF生成は `docs/正本/技術選定理由書.md` に従い、印刷専用HTML
 - updatedAt
 - version
 
+### CreateCaseInputDTO
+
+- branch
+- initialInput（任意）
+- clientRequestId
+
+### CaseSaveResultDTO
+
+- caseId
+- status
+- savedSourceIds
+- version
+- updatedAt
+
+### CaseDetailForEditDTO
+
+- case
+- input
+- sources
+- attachments
+- currentState
+- version
+
+### ResumeStateDTO
+
+- caseId
+- currentState
+- nextScreen
+- pendingActions
+- saved
+- version
+
+### CaseListDTO
+
+- items
+- total
+- page
+
 ### CaseInputDTO
 
 - customerProfile
@@ -1331,11 +1384,26 @@ PDF生成は `docs/正本/技術選定理由書.md` に従い、印刷専用HTML
 - filename
 - mimeType
 - size
-- storageReference
+- downloadAvailable
 - extractionStatus
 - extractedAt
 - errorCode
 - version
+
+内部storage key / storageReferenceはclient DTOへ含めない。
+
+### AttachmentUploadDTO
+
+- attachmentId
+- uploadUrl
+- expiresAt
+- requiredHeaders
+- version
+
+### AttachmentDownloadDTO
+
+- downloadUrl
+- expiresAt
 
 ### SourceDTO
 
@@ -1347,6 +1415,30 @@ PDF生成は `docs/正本/技術選定理由書.md` に従い、印刷専用HTML
 - createdAt
 - version
 - active
+
+### CaseUnderstandingResultDTO
+
+- caseId
+- status
+- understanding
+- createdCandidateFactIds
+- questionBatch
+- version
+- warnings
+
+### MissingInformationDTO
+
+- domain
+- reason
+- valueForCase
+- priority
+- evidenceRefs
+
+### QuestionBatchDraftDTO
+
+- reasonSummary
+- questions
+- status
 
 ### CaseUnderstandingDTO
 
@@ -1400,6 +1492,16 @@ PDF生成は `docs/正本/技術選定理由書.md` に従い、印刷専用HTML
 - createdBy
 - createdAt
 - version
+
+### InterviewSubmitResultDTO
+
+- caseId
+- batchId
+- savedAnswerIds
+- createdOrUpdatedCandidateFactIds
+- nextState
+- version
+- warnings
 
 ### FactDTO
 
@@ -1537,6 +1639,27 @@ PDF生成は `docs/正本/技術選定理由書.md` に従い、印刷専用HTML
 - barrierBreakthrough
 - collaborators
 - reusePoint
+
+### PdfResultDTO
+
+- caseId
+- publicationId
+- compilationId
+- fileName
+- downloadUrl
+- expiresAt
+- generatedAt
+
+### FunnelDTO
+
+- filters
+- started
+- aiUnderstood
+- interviewed
+- factReviewed
+- compiled
+- published
+- abandoned
 
 ### UsageSummaryDTO
 
