@@ -419,11 +419,13 @@ currentState
 
 責務:
 
+- 許可拡張子: PDF / JPG / JPEG / PNG / DOCX / XLSX / PPTX / TXT / CSV
 - MIME
-- 拡張子
-- サイズ
-- 件数
+- 1ファイル最大20MB
+- 1案件あたり有効添付最大10ファイル
+- 1案件あたり最大合計200MB
 - 禁止形式
+- 破損・不正ファイル
   を検証
 
 ### storeAttachmentBinary_(...)
@@ -438,12 +440,13 @@ currentState
 
 責務:
 
-- PDF
-- 画像OCR
-- 文書
-- 表計算
-- テキスト
-  から利用可能なテキストを抽出
+- テキストPDFは直接抽出
+- 画像PDF / JPG / JPEG / PNGはGoogle Cloud Document AI Enterprise Document OCR
+- DOCXは文書parser
+- XLSXは表計算parser
+- PPTXはプレゼンテーションparser
+- TXT / CSVは直接読込
+  により利用可能なテキストを抽出
 - 抽出失敗と判読不確実を区別する
 - 判読不確実な範囲・警告を保持し、確実な原文として扱わない
 
@@ -1923,7 +1926,7 @@ candidate / needs_check / rejectedを確定本文根拠へ入れない。
 - file storage: Google Cloud Storage
 - 認証: Google Workspace OIDC
 - PDF: 印刷専用HTML/CSS + headless Chromium
-- 全文検索: PostgreSQL内の日本語全文検索、`pg_bigm` を第一選択
+- 全文検索: Cloud SQL for PostgreSQL 18 + `pg_bigm`
 
 その前提で、実装指示書・物理設計では以下を具体化する。
 
@@ -1934,10 +1937,10 @@ candidate / needs_check / rejectedを確定本文根拠へ入れない。
 - session / tokenの具体取扱い
 - DB transaction境界
 - signed URL等のupload/download手順
-- OCR / document parserの具体方式
-- AI provider / model
+- document parserの実装ライブラリ
+- OpenAI API内で使用する具体モデル
 
-OCR方式、AI provider / model、日本語全文検索の最終確認は `docs/正本/技術選定理由書.md` §7のP1着手ゲートで確定する。
+OCR方式、AI provider、PostgreSQL major version、日本語全文検索方式は `docs/正本/技術選定理由書.md` で確定済みとする。
 
 ただし、物理設計によって本書の業務責務を変更しない。
 
@@ -1945,6 +1948,6 @@ OCR方式、AI provider / model、日本語全文検索の最終確認は `docs/
 
 開発工程表・テスト計画は作成済みである。
 
-次は `docs/正本/技術選定理由書.md` §7の9項目を確定し、該当正本と開発工程表へ反映した後、`docs/実装指示書/P1_事例作成コア.md` を作成する。
+未確定事項の検討結果を関連正本へ反映したため、次は全関連正本の再クロスレビューを実施する。矛盾・抜けがないことを確認して正本確定後、`docs/実装指示書/P1_事例作成コア.md` を作成する。
 
 P1実装指示書確定前にClaude Codeへ実装を開始させない。
