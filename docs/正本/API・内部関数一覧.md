@@ -313,10 +313,11 @@ currentState
 責務:
 
 - owner
-- branch
 - role
+- action
 - publication status
   に基づき操作可否を判定
+- 公開済み事例の検索・閲覧ではbranchを認可条件に使わない
 
 ### normalizeCaseInput_(input)
 
@@ -890,7 +891,8 @@ MVPでは承認フローを使用しない。
 責務:
 
 - 編纂確認済みか検証
-- 社内公開設定を適用
+- MVPでは `visibility=internal`、`showCustomerName=true`、`showAmounts=true` を適用する
+- 一般利用者向けの表示設定変更APIはMVPでは設けない
 - 検索索引生成
 - publication更新
 - publishedへ状態遷移
@@ -926,6 +928,12 @@ MVP条件:
 承認済みであることは要求しない。
 
 ### buildSearchIndex_(caseId, compilation)
+
+責務:
+
+- confirmed factと公開対象compilationから検索索引を生成
+- コメント本文を索引へ含めない
+- publicationの表示設定で非表示となる情報を索引・検索結果から漏らさない
 
 ### commitPublication_(caseId, compilationId, searchIndex, expectedVersion)
 
@@ -1020,6 +1028,11 @@ MVPの通常フローには組み込まない。
 ### buildCaseCardDTO_(caseId)
 
 ### buildPublishedCaseDetailDTO_(caseId)
+
+責務:
+
+- publicationの表示設定を適用して詳細DTOを生成
+- 内部candidate・AIログ・storage key・非表示情報を返さない
 
 ベクトル検索関数はMVPでは定義しない。
 
@@ -1117,6 +1130,8 @@ A4印刷・PDFはMVP必須。
 - A4出力に必要なViewModelを生成
 - 正本データから生成
 - 社内利用版を対象
+- publicationの表示設定を適用する
+- コメント本文を含めない
 
 ### generatePdf(caseId, options)
 
