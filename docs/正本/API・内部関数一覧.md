@@ -154,8 +154,9 @@ currentState
 - role
 - branch
 - 案件ownership
-- 管轄範囲
+- action
   から実効権限を決定する
+- 公開済み販売事例の検索・閲覧ではbranchやmanager管轄を閲覧制限に使わない
 
 ## 7. Case API
 
@@ -1914,34 +1915,36 @@ candidate / needs_check / rejectedを確定本文根拠へ入れない。
 
 ## 38. 物理API設計で具体化する項目
 
-技術構成は `docs/正本/技術選定理由書.md` で確定する。
+物理技術構成のうち、以下は `docs/正本/技術選定理由書.md` で確定済みである。
 
-以下は、その技術構成を前提に実装指示書・物理設計へ落とし込む。
+- Web基盤: TypeScript / Next.js
+- 実行基盤: Google Cloud Run
+- DB: PostgreSQL / Google Cloud SQL
+- file storage: Google Cloud Storage
+- 認証: Google Workspace OIDC
+- PDF: 印刷専用HTML/CSS + headless Chromium
+- 全文検索: PostgreSQL内の日本語全文検索、`pg_bigm` を第一選択
+
+その前提で、実装指示書・物理設計では以下を具体化する。
 
 - HTTP method
 - endpoint path
 - request body
 - response status
-- 認証トークン形式
-- DB transaction方式
-- file upload方式
-- storage provider
-- OCR / document parser
+- session / tokenの具体取扱い
+- DB transaction境界
+- signed URL等のupload/download手順
+- OCR / document parserの具体方式
 - AI provider / model
-- PDF renderer
-- 全文検索エンジン
 
-ただし、技術選定によって本書の業務責務を変更しない。
+OCR方式、AI provider / model、日本語全文検索の最終確認は `docs/正本/技術選定理由書.md` §7のP1着手ゲートで確定する。
+
+ただし、物理設計によって本書の業務責務を変更しない。
 
 ## 39. 次工程への条件
 
-本書確定後、`docs/正本/開発工程表・テスト計画.md` を作成する。
+開発工程表・テスト計画は作成済みである。
 
-開発工程表では以下を基準に工程を切る。
+次は `docs/正本/技術選定理由書.md` §7の9項目を確定し、該当正本と開発工程表へ反映した後、`docs/実装指示書/P1_事例作成コア.md` を作成する。
 
-- 各工程が独立して検査できること
-- 1工程ごとに受入条件を持つこと
-- UIだけ、DBだけではなく業務価値単位で切ること
-- AI取材品質を技術テストだけで完了にしないこと
-- A4/PDF、添付資料をMVP必須として工程へ含めること
-- 承認、匿名共有、ランキング、旧データ移行をMVP工程へ入れないこと
+P1実装指示書確定前にClaude Codeへ実装を開始させない。
