@@ -1037,7 +1037,9 @@ MVPの通常フローには組み込まない。
 
 責務:
 
-- 公開済み事例の有効コメントを時系列で返す
+- caseに有効なpublicationが存在することを検証
+- caseに紐づく有効コメントを時系列で返す
+- 過去publication時に投稿されたコメントも保持して返す
 - 削除済みコメント本文は通常利用者へ返さない
 
 ### createComment(caseId, body)
@@ -1047,7 +1049,9 @@ MVPの通常フローには組み込まない。
 責務:
 
 - 認証済み社内利用者のコメントを登録
-- 対象caseが公開済みであることを検証
+- case.statusではなく、有効なpublicationが存在することを検証
+- 投稿時点のpublicationIdを記録
+- 空本文を拒否
 - `comment_created` を記録
 
 ### updateComment(commentId, body, expectedVersion)
@@ -1083,6 +1087,12 @@ MVPの通常フローには組み込まない。
 ## 25. Comment内部関数
 
 ### validateCommentTarget_(caseId)
+
+責務:
+
+- 有効なpublicationの存在を検証
+- caseが改訂中のfact_review / compilation_reviewでも、有効publicationが残っていればコメント対象として許可
+- 公開停止中は通常利用者の一覧取得・新規投稿を拒否
 
 ### validateCommentAuthor_(commentId, userContext)
 
@@ -1214,6 +1224,9 @@ MVPでは1事例単位の出力を対象とし、複数事例一括PDFは対象�
 - 検索回数
 - 0件検索
 - 事例閲覧
+- コメント投稿
+- コメント編集
+- コメント削除
 
 ### getFunnel(filters)
 
@@ -1525,6 +1538,9 @@ MVPでは1事例単位の出力を対象とし、複数事例一括PDFは対象�
 - searches
 - zeroResultSearches
 - views
+- commentsCreated
+- commentsUpdated
+- commentsDeleted
 
 ## 34. domain一覧
 
