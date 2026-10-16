@@ -2,6 +2,15 @@
 
 営業担当者の断片的な情報から、AIによる不足確認と人間による事実確認を経て、営業で再利用できる販売事例を作成・蓄積・検索する社内システムの新規再設計プロジェクト。
 
+## 共通の開発ルール（最初に確認）
+
+- [ルールブック.md](ルールブック.md) — AI開発の手順・役割・承認・正本読了・履歴・完了判定
+- [GitHubリポジトリ標準規約.md](GitHubリポジトリ標準規約.md) — 正本・計画・記録・AI設定・GitHub更新管理
+- `AGENTS.md` — Codex用の入口
+- `CLAUDE.md` — Claude Code用の入口
+
+両規約は**このリポジトリのルートに保存されたファイル**を使用する。ファイル名を示すだけでは読了扱いにしない。
+
 ## リポジトリ
 
 GitHub: `xxxinakenxxx-hash/New-Sales-Cases`
@@ -11,7 +20,7 @@ GitHub: `xxxinakenxxx-hash/New-Sales-Cases`
 ## 文書の役割
 
 - `docs/正本/` : 仕様・設計の正本
-- `docs/記録/` : 判断理由・運用ルール等の記録
+- `docs/記録/` : 判断理由・レビュー・検証等の記録（旧開発運用ルールは過去記録）
 - `docs/実装指示書/` : Claude Codeへ渡す工程別実装指示
 - `tasks/CHAT_CURRENT.md` : ChatGPT側の現在地・判断・次指示
 - `tasks/TASK_CURRENT.md` : Claude Code側の実装進捗・テスト結果
@@ -29,7 +38,7 @@ GitHub: `xxxinakenxxx-hash/New-Sales-Cases`
 6. `docs/正本/API・内部関数一覧.md`
 7. `docs/正本/技術選定理由書.md`
 8. `docs/正本/開発工程表・テスト計画.md`
-9. `docs/記録/開発運用ルール.md`
+9. `ルールブック.md` と `GitHubリポジトリ標準規約.md`
 10. `tasks/CHAT_CURRENT.md`
 11. `tasks/TASK_CURRENT.md`
 
